@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Explainable Fraud Detection</title>
+    <style>
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .reset-text {
+        color: #e74c3c;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: bold;
+        display: none;
+        user-select: none;
+    }
+
+        .reset-text:hover {
+        text-decoration: underline;
+    }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f4f6f8;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input {
+            width: 200px;
+            padding: 6px;
+            margin-top: 4px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 16px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .high { background: #ffcccc; }
+        .medium { background: #fff0b3; }
+        .low { background: #ccffcc; }
+        ul {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Credit Risk Assessment</h1>
+
+<div class="section">
+    <h2>Customer Financial Inputs</h2>
+
+    <label>Credit Limit</label>
+    <input type="number" id="LIMIT_BAL" min="0" required>
+
+    <h3>Monthly Bills (Last 6 Months)</h3>
+    <input type="number" id="BILL_SEPT" placeholder="Sept">
+    <input type="number" id="BILL_AUG" placeholder="Aug">
+    <input type="number" id="BILL_JUL" placeholder="Jul">
+    <input type="number" id="BILL_JUN" placeholder="Jun">
+    <input type="number" id="BILL_MAY" placeholder="May">
+    <input type="number" id="BILL_APR" placeholder="Apr">
+
+    <h3>Monthly Payments (Last 6 Months)</h3>
+    <input type="number" id="PAY_AMT_SEPT" placeholder="Sept">
+    <input type="number" id="PAY_AMT_AUG" placeholder="Aug">
+    <input type="number" id="PAY_AMT_JUL" placeholder="Jul">
+    <input type="number" id="PAY_AMT_JUN" placeholder="Jun">
+    <input type="number" id="PAY_AMT_MAY" placeholder="May">
+    <input type="number" id="PAY_AMT_APR" placeholder="Apr">
+
+    <h3>Repayment Status (0 = on-time, +1 for per month delay)</h3>
+    <input type="number" id="PAY_SEPT" placeholder="Sept" min="0" max="9" step="1"
+       onkeydown=" if (event.key >= '0' && event.key <= '9') {
+             return this.value.length === 0;
+         }
+         return event.key === 'Backspace' || event.key === 'Tab';
+       ">
+    <input type="number" id="PAY_AUG" placeholder="Aug" min="0" max="9" step="1"
+       onkeydown=" if (event.key >= '0' && event.key <= '9') {
+             return this.value.length === 0;
+         }
+         return event.key === 'Backspace' || event.key === 'Tab';
+       ">
+    <input type="number" id="PAY_JUL" placeholder="Jul" min="0" max="9" step="1"
+       onkeydown=" if (event.key >= '0' && event.key <= '9') {
+             return this.value.length === 0;
+         }
+         return event.key === 'Backspace' || event.key === 'Tab';
+       ">
+    <input type="number" id="PAY_JUN" placeholder="Jun" min="0" max="9" step="1"
+       onkeydown=" if (event.key >= '0' && event.key <= '9') {
+             return this.value.length === 0;
+         }
+         return event.key === 'Backspace' || event.key === 'Tab';
+       ">
+    <input type="number" id="PAY_MAY" placeholder="May" min="0" max="9" step="1"
+       onkeydown=" if (event.key >= '0' && event.key <= '9') {
+             return this.value.length === 0;
+         }
+         return event.key === 'Backspace' || event.key === 'Tab';
+       ">
+    <input type="number" id="PAY_APR" placeholder="Apr" min="0" max="9" step="1"
+       onkeydown=" if (event.key >= '0' && event.key <= '9') {
+             return this.value.length === 0;
+         }
+         return event.key === 'Backspace' || event.key === 'Tab';
+       ">
+
+    <div class="form-actions">
+    <button onclick="submitForm()">Assess Risk</button>
+    <span class="reset-text" id="resetBtn" onclick="resetForm()">
+        Reset
+    </span>
+</div>
+</div>
+
+<div id="output"></div>
+
+<script>
+function getValue(id) {
+    return Number(document.getElementById(id).value || 0);
+}
+
+async function submitForm() {
+    const payload = {
+        LIMIT_BAL: getValue("LIMIT_BAL"),
+
+        BILL_SEPT: getValue("BILL_SEPT"),
+        BILL_AUG: getValue("BILL_AUG"),
+        BILL_JUL: getValue("BILL_JUL"),
+        BILL_JUN: getValue("BILL_JUN"),
+        BILL_MAY: getValue("BILL_MAY"),
+        BILL_APR: getValue("BILL_APR"),
+
+        PAY_AMT_SEPT: getValue("PAY_AMT_SEPT"),
+        PAY_AMT_AUG: getValue("PAY_AMT_AUG"),
+        PAY_AMT_JUL: getValue("PAY_AMT_JUL"),
+        PAY_AMT_JUN: getValue("PAY_AMT_JUN"),
+        PAY_AMT_MAY: getValue("PAY_AMT_MAY"),
+        PAY_AMT_APR: getValue("PAY_AMT_APR"),
+
+        PAY_SEPT: getValue("PAY_SEPT"),
+        PAY_AUG: getValue("PAY_AUG"),
+        PAY_JUL: getValue("PAY_JUL"),
+        PAY_JUN: getValue("PAY_JUN"),
+        PAY_MAY: getValue("PAY_MAY"),
+        PAY_APR: getValue("PAY_APR")
+    };
+
+    const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    renderResult(result);
+}
+
+function renderResult(data) {
+    let riskClass = "low";
+    if (data.risk_level === "High Risk") riskClass = "high";
+    else if (data.risk_level === "Medium Risk") riskClass = "medium";
+
+    let html = `
+        <div class="section result ${riskClass}">
+            <h2>Prediction Result</h2>
+            <p><strong>Prediction:</strong> ${data.prediction}</p>
+            <p><strong>Risk Probability:</strong> ${data.risk_probability}</p>
+            <p><strong>Risk Level:</strong> ${data.risk_level}</p>
+            <h3>Key Reasons</h3>
+            <ul>
+                ${data.key_reasons.map(r => `<li>${r}</li>`).join("")}
+            </ul>
+            <p><em>${data.fairness_note}</em></p>
+        </div>
+    `;
+    document.getElementById("output").innerHTML = html;
+}
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const inputs = document.querySelectorAll("input");
+    const resetBtn = document.getElementById("resetBtn");
+
+    if (!resetBtn) {
+        console.error("Reset button not found in DOM");
+        return;
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener("input", () => {
+            const hasValue = Array.from(inputs).some(i => i.value !== "");
+            resetBtn.style.display = hasValue ? "inline-flex" : "none";
+        });
+    });
+
+    window.resetForm = function () {
+        inputs.forEach(input => input.value = "");
+        document.getElementById("output").innerHTML = "";
+        resetBtn.style.display = "none";
+    };
+});
+</script>
+</body>
+</html>
